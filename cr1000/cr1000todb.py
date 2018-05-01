@@ -5,11 +5,15 @@ import re
 import datetime
 import psycopg2 as pg
 import pytz
-
+import sys
 
 UTC = pytz.utc
 
-db = 'sanae54'
+if sys.argv[1]=='sanae54':
+	db = 'sanae54'
+else:
+	db = 'sanae54test'
+
 dbuser = 'steve'
 dbpass = 'frub*jub'
 conn = pg.connect(database=db, user=dbuser, password=dbpass)
@@ -34,16 +38,16 @@ p = re.compile(r"""^"
                    (?P<hour>\d{2}):
                    (?P<minute>\d{2}):
                    (?P<second>\d{2})",
-                   \d{4,8},
-                   (?P<windspeed>\d{1,2}[.]\d{1,2}),
+                   \d{1,8},
+                   (?P<windspeed>\d{1,2}[.]?\d{0,2}),
                    (?P<winddirection>\d{1,3}[.]?\d{0,1}),
                    (?P<windelevation>-?\d{1,2}[.]?\d{0,2}),
-                   (?P<speedofsound>\d{3}[.]\d{1,2}),
-                   (?P<sonictemperature>-?\d{1,2}[.]\d{1,2}),
+                   (?P<speedofsound>\d{3}[.]?\d{0,2}),
+                   (?P<sonictemperature>-?\d{1,2}[.]?\d{0,2}),
 		   (?P<latitudeA>-?\d{1,2}),
-		   (?P<latitudeB>-?\d{1,3}[.]?\d{2,4}),
+		   (?P<latitudeB>-?\d{1,3}[.]?\d{0,4}),
 		   (?P<longitudeA>-?\d{1,3}),
-		   (?P<longitudeB>-?\d{1,3}[.]?\d{2,4}),
+		   (?P<longitudeB>-?\d{1,3}[.]?\d{0,4}),
 		   (?P<speed>\d{1,2}[.]?\d{0,1}),
 		   (?P<course>\d{1,3}[.]?\d{0,2}),
 		   (?P<magvar>-?\d{0,2}[.]?\d{0,2}),
@@ -66,7 +70,6 @@ for line in fileinput.input():
                         minute=int(m.group('minute'))
                         second=int(m.group('second'))
 			time = datetime.datetime(year,month,day,hour,minute,second,tzinfo=UTC)
-
                         windspeed=float(m.group('windspeed'))
                         winddirection=float(m.group('winddirection'))
                         windelevation=float(m.group('windelevation'))
@@ -96,10 +99,10 @@ for line in fileinput.input():
 	
 		#print "%d %d %d %f %f %f %f" % (hour, minute, second, latitude, longitude, windspeed, windelevation)
 
-		sql = "insert into cr1000 (time, windspeed, winddirection, windelevation, speedofsound, sonictemperature, latitude, longitude, speed, magvariation, fixquality, nmbr_sat, cncounter, course) values (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s);"
-		data = (time, windspeed, winddirection, windelevation, speedofsound, sonictemperature, latitude, longitude, speed, magvar, fixquality, numsats, CPC, course)
+		sql = "insert into cr1000_l0 (time, windspeed, winddirection, windelevation, speedofsound, sonictemperature, latitude, longitude, speed, course, magvariation, fixquality, nmbr_sat, cncounter) values (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s);"
+		data = (time, windspeed, winddirection, windelevation, speedofsound, sonictemperature, latitude, longitude, speed, course, magvar, fixquality, numsats, CPC)
 
-		print "inserting data %s %s" % (time.isoformat(), CPC)
+		sys.stderr.write("inserting data %s %s" % (time.isoformat(), CPC))
 		cur.execute(sql, data)
 
 conn.commit()

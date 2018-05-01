@@ -1,5 +1,6 @@
-*.py~
-.8.un~
+*~
+.*.un~
+.*.swp
 rawdata
 python
 
