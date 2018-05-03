@@ -16,4 +16,32 @@
 # re-run. Sort of like a make system for data,
 # except that it will work across git and postres
 
+import psycopg2
+import git
+import sys
+import datetime
 
+# first get a repository object. The script should
+# be run in the directory where the .git directory
+# is located.
+
+repo = git.Repo()
+
+# it's not empty, and we've been diligent in tracking
+# everything. Also, everything that is tracked is 
+# committed to the repository.
+assert not repo.bare
+assert len(repo.untracked_files) == 0
+assert not repo.is_dirty()
+
+head = repo.head
+master = head.reference
+log = master.log()
+
+
+# we need to figure out how to add a timezone to this:
+# gitpython works in seconds west of UTC.
+# the following is pseudocode:
+tz = timezone.fromsecondswestofUTC(log[-1][3][1])
+
+lastcommit = datetime.fromtimestamp(log[-1][3][0],tz=tz)
