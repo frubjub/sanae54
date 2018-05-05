@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/env python3
 
 import fileinput
 import re
@@ -21,6 +21,13 @@ cur = conn.cursor()
 cur.execute("set timezone to utc")
 conn.commit()
 
+# delete everything from the cr1000_L0 table
+
+deletesql = "delete from cr1000_L0"
+cur.execute(deletesql)
+resetsql = "alter sequence cr1000_L0_id_seq restart with 1"
+cur.execute(resetsql)
+conn.commit()
 
 # we want to get cr1000/rmyoung81000/CPC data (half hertz)
 # and insert it into a postgis database. 
@@ -57,6 +64,9 @@ p = re.compile(r"""^"
                    .*
                    """, re.VERBOSE)
 
+# fileinput should only look for files in argv[1:]
+# therefore should ignore our switch for the test/non-test
+# database
 for line in fileinput.input():
 
         m = p.match(line)
@@ -69,7 +79,7 @@ for line in fileinput.input():
                         hour=int(m.group('hour'))
                         minute=int(m.group('minute'))
                         second=int(m.group('second'))
-			time = datetime.datetime(year,month,day,hour,minute,second,tzinfo=UTC)
+			time=datetime.datetime(year,month,day,hour,minute,second,tzinfo=UTC)
                         windspeed=float(m.group('windspeed'))
                         winddirection=float(m.group('winddirection'))
                         windelevation=float(m.group('windelevation'))
@@ -80,12 +90,12 @@ for line in fileinput.input():
 			latitude= latitudeA + latitudeB/60.0
 			longitudeA=float(m.group('longitudeA'))
 			longitudeB=float(m.group('longitudeB'))
-			longitude = longitudeA + longitudeB/60.0
-			speed = float(m.group('speed'))
-			course = float(m.group('course'))
-			magvar = float(m.group('magvar'))
-			fixquality = int(m.group('fixquality'))
-			numsats = int(m.group('numsats'))
+			longitude=longitudeA + longitudeB/60.0
+			speed=float(m.group('speed'))
+			course=float(m.group('course'))
+			magvar=float(m.group('magvar'))
+			fixquality=int(m.group('fixquality'))
+			numsats=int(m.group('numsats'))
 			if (m.group('CPC') == '"NAN"'):
 				CPC = 9999.9
 			else:
@@ -94,13 +104,13 @@ for line in fileinput.input():
 
 
                 except (ValueError):
-			print "ValueError!"
+			print("ValueError!")
                         continue
 	
 		#print "%d %d %d %f %f %f %f" % (hour, minute, second, latitude, longitude, windspeed, windelevation)
 
-		sql = "insert into cr1000_l0 (time, windspeed, winddirection, windelevation, speedofsound, sonictemperature, latitude, longitude, speed, course, magvariation, fixquality, nmbr_sat, cncounter) values (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s);"
-		data = (time, windspeed, winddirection, windelevation, speedofsound, sonictemperature, latitude, longitude, speed, course, magvar, fixquality, numsats, CPC)
+		sql="insert into cr1000_l0 (time, windspeed, winddirection, windelevation, speedofsound, sonictemperature, latitude, longitude, speed, course, magvariation, fixquality, nmbr_sat, cncounter) values (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s);"
+		data=(time, windspeed, winddirection, windelevation, speedofsound, sonictemperature, latitude, longitude, speed, course, magvar, fixquality, numsats, CPC)
 
 		sys.stderr.write("inserting data %s %s" % (time.isoformat(), CPC))
 		cur.execute(sql, data)
